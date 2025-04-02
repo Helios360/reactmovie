@@ -6,6 +6,10 @@ import * as yup from 'yup';
 import axios from 'axios';
 import { addComment, deleteComment } from './store/commentSlice';
 import './App.css';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 // Form validation schema
 const schema = yup.object({
   comment: yup.string()
@@ -80,118 +84,104 @@ function App() {
   if (loading) return <div className="container">Chargement...</div>;
 
   return (
-    <div className="container">
+    <Container>
       {movie && (
-        <div className="movie-header">
-          {error && <div className="error-banner">Remarque: {error} (Données de secours affichées)</div>}
-          <div className="movie-info">
+        <Card className="mb-4">
+          {error && <Alert variant="warning">Remarque: {error} (Données de secours affichées)</Alert>}
+          <Row>
             {movie.poster_path && (
-              <div className="movie-poster">
-                <img 
-                  src={movie.poster_path.replace(/\\/g, '')} 
-                  alt={movie.original_title} 
+              <Col md={4}>
+                <Card.Img
+                  variant="top"
+                  src={movie.poster_path.replace(/\\/g, '')}
+                  alt={movie.original_title}
                   className="poster-image"
                 />
-              </div>
+              </Col>
             )}
-            <div className="movie-details">
-              <h1 className="movie-title">{movie.original_title}</h1>
-              <p className="movie-description">{movie.overview}</p>
-              <p className="movie-release">Sortie le: {movie.release_date}</p>
-              <p className="movie-rating">Note moyenne: {movie.vote_average} /10 ({movie.vote_count || 0} votes)</p>
-              
-              {movie.casts && movie.casts.length > 0 && (
-                <div className="movie-cast">
-                  <h3>Distribution</h3>
-                  <ul className="cast-list">
-                    {movie.casts.slice(0, 5).map(cast => (
-                      <li key={cast.id} className="cast-item">
-                        {cast.name} ({cast.character})
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+            <Col md={movie.poster_path ? 8 : 12}>
+              <Card.Body>
+                <Card.Title>{movie.original_title}</Card.Title>
+                <Card.Text>{movie.overview}</Card.Text>
+                <Card.Text>Sortie le: {movie.release_date}</Card.Text>
+                <Card.Text>Note moyenne: {movie.vote_average} /10 ({movie.vote_count || 0} votes)</Card.Text>
+                {movie.casts && movie.casts.length > 0 && (
+                  <div>
+                    <h3>Distribution</h3>
+                    <ul>
+                      {movie.casts.slice(0, 5).map(cast => (
+                        <li key={cast.id}>
+                          {cast.name} ({cast.character})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </Card.Body>
+            </Col>
+          </Row>
+        </Card>
       )}
 
-      <div className="comments-section">
-        <h2>Commentaires</h2>
-        
-        {comments.length === 0 ? (
-          <div className="no-comments">
-            Aucun commentaire pour le moment.
-          </div>
-        ) : (
-          <div className="comment-list">
-            {comments.map(comment => (
-              <div key={comment.id} className="comment-item">
-                <div className="comment-header">
-                  <span className="comment-date">{comment.createdAt}</span>
-                  <span className="comment-rating">Note: {comment.note}/5</span>
-                </div>
-                <p className="comment-text">{comment.comment}</p>
-                <button 
-                  className="delete-btn" 
-                  onClick={() => handleDelete(comment.id)}
-                >
-                  Supprimer
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="comment-form">
-          <h3>Ajouter un commentaire</h3>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="form-group">
-              <label htmlFor="comment">Commentaire</label>
-              <textarea 
-                id="comment"
-                className="form-control" 
-                {...register("comment")}
-                rows="4"
-              ></textarea>
-              {errors.comment && <p className="error-message">{errors.comment.message}</p>}
+      <Card>
+        <Card.Body>
+          <h2>Commentaires</h2>
+          {comments.length === 0 ? (
+            <Alert variant="info">Aucun commentaire pour le moment.</Alert>
+          ) : (
+            <div>
+              {comments.map(comment => (
+                <Card key={comment.id} className="mb-2">
+                  <Card.Body>
+                    <Card.Text>
+                      <span className="comment-date">{comment.createdAt}</span>
+                      <span className="comment-rating">Note: {comment.note}/5</span>
+                    </Card.Text>
+                    <Card.Text>{comment.comment}</Card.Text>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
+                      Supprimer
+                    </Button>
+                  </Card.Body>
+                </Card>
+              ))}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="note">Note</label>
-              <select 
-                id="note"
-                className="form-control" 
-                {...register("note")}
-              >
+          )}
+
+          <h3>Ajouter un commentaire</h3>
+          <Form onSubmit={handleSubmit(onSubmit)}>
+            <Form.Group controlId="comment">
+              <Form.Label>Commentaire</Form.Label>
+              <Form.Control as="textarea" rows="4" {...register("comment")} />
+              {errors.comment && <Form.Text className="text-danger">{errors.comment.message}</Form.Text>}
+            </Form.Group>
+
+            <Form.Group controlId="note">
+              <Form.Label>Note</Form.Label>
+              <Form.Control as="select" {...register("note")}>
                 <option value="">Sélectionnez une note</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
                 <option value="5">5</option>
-              </select>
-              {errors.note && <p className="error-message">{errors.note.message}</p>}
-            </div>
-            
-            <div className="checkbox-group">
-              <input 
-                type="checkbox" 
-                id="acceptConditions" 
-                {...register("acceptConditions")} 
+              </Form.Control>
+              {errors.note && <Form.Text className="text-danger">{errors.note.message}</Form.Text>}
+            </Form.Group>
+
+            <Form.Group controlId="acceptConditions">
+              <Form.Check
+                type="checkbox"
+                label="J'accepte les conditions générales"
+                {...register("acceptConditions")}
               />
-              <label htmlFor="acceptConditions">J'accepte les conditions générales</label>
-            </div>
-            {errors.acceptConditions && (
-              <p className="error-message">{errors.acceptConditions.message}</p>
-            )}
-            
-            <button type="submit" className="submit-btn">Ajouter</button>
-          </form>
-        </div>
-      </div>
-    </div>
+              {errors.acceptConditions && <Form.Text className="text-danger">{errors.acceptConditions.message}</Form.Text>}
+            </Form.Group>
+
+            <Button type="submit" variant="primary">Ajouter</Button>
+          </Form>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 }
 
