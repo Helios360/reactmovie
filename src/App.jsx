@@ -7,7 +7,6 @@ import axios from 'axios';
 import { addComment, deleteComment } from './store/commentSlice';
 import './App.css';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Form validation schema
@@ -27,10 +26,10 @@ function App() {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const comments = useSelector(state => state.comments);
   const dispatch = useDispatch();
-  
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   });
@@ -38,16 +37,12 @@ function App() {
   useEffect(() => {
     const fetchMovie = async () => {
       try {
-        setLoading(true);
         const response = await axios.get('https://jsonfakery.com/movies/random/1');
-        // The API returns an array with one movie object
         setMovie(response.data[0]);
         setError(null);
       } catch (err) {
         console.error('API Error:', err);
         setError('Erreur lors du chargement du film');
-        
-        // Fallback data in case the API fails
         setMovie({
           id: "fallback-movie",
           original_title: "The Honey Games",
@@ -72,7 +67,7 @@ function App() {
       note: Number(data.note),
       createdAt: new Date().toLocaleDateString()
     };
-    
+
     dispatch(addComment(newComment));
     reset();
   };
@@ -81,7 +76,13 @@ function App() {
     dispatch(deleteComment(id));
   };
 
-  if (loading) return <div className="container">Chargement...</div>;
+  if (loading) return (
+    <Container className="text-center mt-5">
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">Chargement...</span>
+      </Spinner>
+    </Container>
+  );
 
   return (
     <Container>
@@ -108,9 +109,9 @@ function App() {
                 {movie.casts && movie.casts.length > 0 && (
                   <div>
                     <h3>Distribution</h3>
-                    <ul>
+                    <ul className="cast-list">
                       {movie.casts.slice(0, 5).map(cast => (
-                        <li key={cast.id}>
+                        <li key={cast.id} className="cast-item">
                           {cast.name} ({cast.character})
                         </li>
                       ))}
