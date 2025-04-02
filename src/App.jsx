@@ -91,65 +91,27 @@ function App() {
           {error && <Alert variant="warning">Remarque: {error} (Données de secours affichées)</Alert>}
           <Row>
             {movie.poster_path && (
-              <Col md={4}>
                 <Card.Img
                   variant="top"
                   src={movie.poster_path.replace(/\\/g, '')}
                   alt={movie.original_title}
                   className="poster-image"
                 />
-              </Col>
             )}
-            <Col md={movie.poster_path ? 8 : 12}>
-              <Card.Body>
+              <Card.Body className='p-4'>
                 <Card.Title>{movie.original_title}</Card.Title>
-                <Card.Text>{movie.overview}</Card.Text>
                 <Card.Text>Sortie le: {movie.release_date}</Card.Text>
+                <Card.Text>{movie.overview}</Card.Text>
                 <Card.Text>Note moyenne: {movie.vote_average} /10 ({movie.vote_count || 0} votes)</Card.Text>
-                {movie.casts && movie.casts.length > 0 && (
-                  <div>
-                    <h3>Distribution</h3>
-                    <ul className="cast-list">
-                      {movie.casts.slice(0, 5).map(cast => (
-                        <li key={cast.id} className="cast-item">
-                          {cast.name} ({cast.character})
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </Card.Body>
-            </Col>
           </Row>
         </Card>
       )}
 
-      <Card>
-        <Card.Body>
           <h2>Commentaires</h2>
-          {comments.length === 0 ? (
-            <Alert variant="info">Aucun commentaire pour le moment.</Alert>
-          ) : (
-            <div>
-              {comments.map(comment => (
-                <Card key={comment.id} className="mb-2">
-                  <Card.Body>
-                    <Card.Text>
-                      <span className="comment-date">{comment.createdAt}</span>
-                      <span className="comment-rating">Note: {comment.note}/5</span>
-                    </Card.Text>
-                    <Card.Text>{comment.comment}</Card.Text>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
-                      Supprimer
-                    </Button>
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          )}
+          
 
-          <h3>Ajouter un commentaire</h3>
-          <Form onSubmit={handleSubmit(onSubmit)}>
+          <Form onSubmit={handleSubmit(onSubmit)} className='mb-5'>
             <Form.Group controlId="comment">
               <Form.Label>Commentaire</Form.Label>
               <Form.Control as="textarea" rows="4" {...register("comment")} />
@@ -180,8 +142,26 @@ function App() {
 
             <Button type="submit" variant="primary">Ajouter</Button>
           </Form>
-        </Card.Body>
-      </Card>
+          {comments.length === 0 ? (
+            <Alert variant="info">Aucun commentaire pour le moment.</Alert>
+          ) : (
+            <div>
+              {comments.map(comment => (
+                <Card key={comment.id} className="mb-2">
+                  <Card.Body>
+                    <Card.Text>
+                      <span className="comment-date">{comment.createdAt}</span>
+                      <span className="comment-rating">Note: {comment.note}/5</span>
+                    </Card.Text>
+                    <Card.Text>{comment.comment}</Card.Text>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
+                      Supprimer
+                    </Button>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          )}
     </Container>
   );
 }
