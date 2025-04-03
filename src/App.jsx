@@ -39,7 +39,6 @@ function App() {
       try {
         const response = await axios.get('https://jsonfakery.com/movies/random/1');
         setMovie(response.data[0]);
-        setError(null);
       } catch (err) {
         console.error('API Error:', err);
         setError('Erreur lors du chargement du film');
