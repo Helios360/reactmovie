@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { addComment, deleteComment } from './store/commentSlice';
 import './App.css';
-import { Container, Row, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Form validation schema
@@ -14,6 +14,7 @@ const schema = yup.object({
     .required('Le commentaire est obligatoire')
     .max(500, 'Le commentaire ne doit pas dépasser 500 caractères'),
   note: yup.number()
+    .typeError('Veuillez sélectionner une note')
     .required('La note est obligatoire')
     .min(1, 'La note doit être entre 1 et 5')
     .max(5, 'La note doit être entre 1 et 5'),
@@ -79,99 +80,108 @@ function App() {
 
   if (error) return (
     <Container className="mt-5">
-      <Alert variant="danger">
-        <Alert.Heading>Erreur</Alert.Heading>
-        <p>{error}</p>
-      </Alert>
+      <Row className="justify-content-center">
+        <Col md={6}>
+          <Alert variant="danger">
+            <Alert.Heading>Erreur</Alert.Heading>
+            <p>{error}</p>
+          </Alert>
+        </Col>
+      </Row>
     </Container>
   );
 
   return (
     <Container>
       {movie && (
-        <Card className="mb-4">
-          <Row>
-            {movie.poster_path && (
+        <Row className="justify-content-center">
+          <Col md={6}>
+            <Card className="mb-4">
+              {movie.poster_path && (
                 <Card.Img
                   variant="top"
                   src={movie.poster_path.replace(/\\/g, '')}
                   alt={movie.original_title}
                   className="poster-image"
                 />
-            )}
+              )}
               <Card.Body className='p-4'>
                 <Card.Title>{movie.original_title}</Card.Title>
                 <Card.Text>Sortie le: {movie.release_date}</Card.Text>
                 <Card.Text>{movie.overview}</Card.Text>
                 <Card.Text>Note moyenne: {movie.vote_average} /10 ({movie.vote_count || 0} votes)</Card.Text>
               </Card.Body>
-          </Row>
-        </Card>
-      )}
-
-      <h2>Commentaires</h2>
-      
-      <Form onSubmit={handleSubmit(onSubmit)} className='mb-5'>
-        <Form.Group controlId="comment">
-          <Form.Label>Commentaire</Form.Label>
-          <Form.Control 
-            as="textarea" 
-            rows="4" 
-            {...register("comment")} 
-            isInvalid={!!errors.comment}
-          />
-          {errors.comment && <Form.Control.Feedback type="invalid">{errors.comment.message}</Form.Control.Feedback>}
-        </Form.Group>
-
-        <Form.Group controlId="note">
-          <Form.Label>Note</Form.Label>
-          <Form.Control 
-            as="select" 
-            {...register("note")} 
-            isInvalid={!!errors.note}
-          >
-            <option value="">Sélectionnez une note</option>
-            {[1, 2, 3, 4, 5].map(value => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </Form.Control>
-          {errors.note && <Form.Control.Feedback type="invalid">{errors.note.message}</Form.Control.Feedback>}
-        </Form.Group>
-
-        <Form.Group controlId="acceptConditions">
-          <Form.Check
-            type="checkbox"
-            label="J'accepte les conditions générales"
-            {...register("acceptConditions")}
-            isInvalid={!!errors.acceptConditions}
-            feedback={errors.acceptConditions?.message}
-            feedbackType="invalid"
-          />
-        </Form.Group>
-
-        <Button type="submit" variant="primary" className="mt-3">Ajouter</Button>
-      </Form>
-      
-      {comments.length === 0 ? (
-        <Alert variant="info">Aucun commentaire pour le moment.</Alert>
-      ) : (
-        <div>
-          {comments.map(comment => (
-            <Card key={comment.id} className="mb-2">
-              <Card.Body>
-                <Card.Text>
-                  <span className="comment-date">{comment.createdAt}</span>
-                  <span className="comment-rating">Note: {comment.note}/5</span>
-                </Card.Text>
-                <Card.Text>{comment.comment}</Card.Text>
-                <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
-                  Supprimer
-                </Button>
-              </Card.Body>
             </Card>
-          ))}
-        </div>
+          </Col>
+        </Row>
       )}
+
+      <Row className="justify-content-center">
+        <Col md={6}>
+          <h2>Commentaires</h2>
+          
+          <Form onSubmit={handleSubmit(onSubmit)} className='mb-5'>
+            <Form.Group controlId="comment" className="mb-3">
+              <Form.Label>Commentaire</Form.Label>
+              <Form.Control 
+                as="textarea" 
+                rows="4" 
+                {...register("comment")} 
+                isInvalid={!!errors.comment}
+              />
+              {errors.comment && <Form.Control.Feedback type="invalid">{errors.comment.message}</Form.Control.Feedback>}
+            </Form.Group>
+
+            <Form.Group controlId="note" className="mb-3">
+              <Form.Label>Note</Form.Label>
+              <Form.Select 
+                {...register("note")} 
+                isInvalid={!!errors.note}
+              >
+                <option value="">Sélectionnez une note</option>
+                {[1, 2, 3, 4, 5].map(value => (
+                  <option key={value} value={value}>{value}</option>
+                ))}
+              </Form.Select>
+              {errors.note && <Form.Control.Feedback type="invalid">{errors.note.message}</Form.Control.Feedback>}
+            </Form.Group>
+
+            <Form.Group controlId="acceptConditions" className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="J'accepte les conditions générales"
+                {...register("acceptConditions")}
+                isInvalid={!!errors.acceptConditions}
+                feedback={errors.acceptConditions?.message}
+                feedbackType="invalid"
+              />
+            </Form.Group>
+
+            <Button type="submit" variant="primary" className="mt-2">Ajouter</Button>
+          </Form>
+          
+          {comments.length === 0 ? (
+            <Alert variant="info">Aucun commentaire pour le moment.</Alert>
+          ) : (
+            <div>
+              {comments.map(comment => (
+                <Card key={comment.id} className="mb-2">
+                  <Card.Body>
+                    <Card.Text>
+                      <span className="comment-date">{comment.createdAt}</span>
+                      <span className="comment-rating">Note: {comment.note}/5</span>
+                    </Card.Text>
+                    <Card.Text>{comment.comment}</Card.Text>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
+                      Supprimer
+                    </Button>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          )}
+        </Col>
+      </Row>
     </Container>
   );
 }
