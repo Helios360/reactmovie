@@ -3,10 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import axios from 'axios';
 import { addComment, deleteComment } from './store/commentSlice';
 import './App.css';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Form validation schema
@@ -37,20 +36,15 @@ function App() {
   useEffect(() => {
     const fetchMovie = async () => {
       try {
-        const response = await axios.get('https://jsonfakery.com/movies/random/1');
-        setMovie(response.data[0]);
+        const response = await fetch('https://jsonfakery.com/movies/random/1');
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+        setMovie(data[0]);
       } catch (err) {
         console.error('API Error:', err);
         setError('Erreur lors du chargement du film');
-        setMovie({
-          id: "fallback-movie",
-          original_title: "The Honey Games",
-          overview: "When an overenthusiastic Maya accidentally embarrasses the Empress of Buzztropolis, she is forced to unite with a team of misfit bugs and compete in the Honey Games for a chance to save her hive.",
-          release_date: "03/02/2018",
-          vote_average: 6.6,
-          poster_path: "",
-          casts: []
-        });
       } finally {
         setLoading(false);
       }
@@ -83,11 +77,19 @@ function App() {
     </Container>
   );
 
+  if (error) return (
+    <Container className="mt-5">
+      <Alert variant="danger">
+        <Alert.Heading>Erreur</Alert.Heading>
+        <p>{error}</p>
+      </Alert>
+    </Container>
+  );
+
   return (
     <Container>
       {movie && (
         <Card className="mb-4">
-          {error && <Alert variant="warning">Remarque: {error} (Données de secours affichées)</Alert>}
           <Row>
             {movie.poster_path && (
                 <Card.Img
@@ -107,60 +109,69 @@ function App() {
         </Card>
       )}
 
-          <h2>Commentaires</h2>
-          
+      <h2>Commentaires</h2>
+      
+      <Form onSubmit={handleSubmit(onSubmit)} className='mb-5'>
+        <Form.Group controlId="comment">
+          <Form.Label>Commentaire</Form.Label>
+          <Form.Control 
+            as="textarea" 
+            rows="4" 
+            {...register("comment")} 
+            isInvalid={!!errors.comment}
+          />
+          {errors.comment && <Form.Control.Feedback type="invalid">{errors.comment.message}</Form.Control.Feedback>}
+        </Form.Group>
 
-          <Form onSubmit={handleSubmit(onSubmit)} className='mb-5'>
-            <Form.Group controlId="comment">
-              <Form.Label>Commentaire</Form.Label>
-              <Form.Control as="textarea" rows="4" {...register("comment")} />
-              {errors.comment && <Form.Text className="text-danger">{errors.comment.message}</Form.Text>}
-            </Form.Group>
+        <Form.Group controlId="note">
+          <Form.Label>Note</Form.Label>
+          <Form.Control 
+            as="select" 
+            {...register("note")} 
+            isInvalid={!!errors.note}
+          >
+            <option value="">Sélectionnez une note</option>
+            {[1, 2, 3, 4, 5].map(value => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </Form.Control>
+          {errors.note && <Form.Control.Feedback type="invalid">{errors.note.message}</Form.Control.Feedback>}
+        </Form.Group>
 
-            <Form.Group controlId="note">
-              <Form.Label>Note</Form.Label>
-              <Form.Control as="select" {...register("note")}>
-                <option value="">Sélectionnez une note</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </Form.Control>
-              {errors.note && <Form.Text className="text-danger">{errors.note.message}</Form.Text>}
-            </Form.Group>
+        <Form.Group controlId="acceptConditions">
+          <Form.Check
+            type="checkbox"
+            label="J'accepte les conditions générales"
+            {...register("acceptConditions")}
+            isInvalid={!!errors.acceptConditions}
+            feedback={errors.acceptConditions?.message}
+            feedbackType="invalid"
+          />
+        </Form.Group>
 
-            <Form.Group controlId="acceptConditions">
-              <Form.Check
-                type="checkbox"
-                label="J'accepte les conditions générales"
-                {...register("acceptConditions")}
-              />
-              {errors.acceptConditions && <Form.Text className="text-danger">{errors.acceptConditions.message}</Form.Text>}
-            </Form.Group>
-
-            <Button type="submit" variant="primary">Ajouter</Button>
-          </Form>
-          {comments.length === 0 ? (
-            <Alert variant="info">Aucun commentaire pour le moment.</Alert>
-          ) : (
-            <div>
-              {comments.map(comment => (
-                <Card key={comment.id} className="mb-2">
-                  <Card.Body>
-                    <Card.Text>
-                      <span className="comment-date">{comment.createdAt}</span>
-                      <span className="comment-rating">Note: {comment.note}/5</span>
-                    </Card.Text>
-                    <Card.Text>{comment.comment}</Card.Text>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
-                      Supprimer
-                    </Button>
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          )}
+        <Button type="submit" variant="primary" className="mt-3">Ajouter</Button>
+      </Form>
+      
+      {comments.length === 0 ? (
+        <Alert variant="info">Aucun commentaire pour le moment.</Alert>
+      ) : (
+        <div>
+          {comments.map(comment => (
+            <Card key={comment.id} className="mb-2">
+              <Card.Body>
+                <Card.Text>
+                  <span className="comment-date">{comment.createdAt}</span>
+                  <span className="comment-rating">Note: {comment.note}/5</span>
+                </Card.Text>
+                <Card.Text>{comment.comment}</Card.Text>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(comment.id)}>
+                  Supprimer
+                </Button>
+              </Card.Body>
+            </Card>
+          ))}
+        </div>
+      )}
     </Container>
   );
 }
